@@ -1,21 +1,25 @@
 # Генерация матрицы T
 set.seed(123)  # Для воспроизводимости
-T <- matrix(sample(1:5.5, 16, replace = TRUE), nrow = 4)
+T <- matrix(sample(-15:15, 16, replace = TRUE), nrow = 4)
 
 # Проверка определителя матрицы T
 det_T <- det(T)
 print(paste("Определитель матрицы T:", det_T))
-
+print("матрица T:")
+print (T)
 # Формирование матрицы B
 B <- matrix(0, nrow = 4, ncol = 4)
 diag(B) <- c(-10, -5, -1, -0.5)
+print("матрица B:")
+print (B)
+
 
 # Формирование матрицы A
 A <- solve(T) %*% B %*% T
-
 # Проверка определителя матрицы A
 det_A <- det(A)
-print(paste("Определитель матрицы A:", det_A))
+print("матрица A:")
+print (A)
 
 # Находим собственные значения и собственные векторы
 eigen_result <- eigen(A)
@@ -54,3 +58,9 @@ print(eigenvectors)
 print(paste("Проверка корректности:", is_correct))
 print("Коэффициенты C:")
 print(C)
+# Вычисляем обратную матрицу A
+A_inv <- solve(A)
+
+# Печатаем обратную матрицу
+print ("Обратная матрица А:")
+print(A_inv)
