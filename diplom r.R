@@ -1,10 +1,12 @@
 # Генерация матрицы T
 set.seed(123)  # Для воспроизводимости
-T <- matrix(sample(-15:15, 16, replace = TRUE), nrow = 4)
+# Данные
+data <- c(-2, -10, -5, 14, 12, -6, 10, -2, -6, 11, 3, -11, 14, 2, -7, -11)
 
-# Проверка определителя матрицы T
-det_T <- det(T)
-print(paste("Определитель матрицы T:", det_T))
+# Формирование матрицы 4х4
+T <- matrix(data, nrow = 4, byrow = TRUE)
+
+
 print("матрица T:")
 print (T)
 # Формирование матрицы B
@@ -16,8 +18,7 @@ print (B)
 
 # Формирование матрицы A
 A <- solve(T) %*% B %*% T
-# Проверка определителя матрицы A
-det_A <- det(A)
+
 print("матрица A:")
 print (A)
 
@@ -46,10 +47,11 @@ check_eigen <- function(A, eigenvalues, eigenvectors) {
 is_correct <- check_eigen(A, eigenvalues, eigenvectors)
 
 # Задаем вектор начальных условий
-x0 <- c(2, -1.5, 1, -2.5)
-
+x0 <- t(c(2, -1.5, 1, -2.5))
+x0_tr <- t(x0)
+print(x0)
 # Нахождение коэффициентов C
-C <- solve(eigenvectors, x0)
+C <- solve(eigenvectors)%*%t(x0)
 
 # Выводим результаты
 print(paste("Собственные значения:", toString(eigenvalues)))
@@ -58,8 +60,9 @@ print(eigenvectors)
 print(paste("Проверка корректности:", is_correct))
 print("Коэффициенты C:")
 print(C)
+print(diag(C))
 # Вычисляем обратную матрицу A
-A_inv <- solve(A)
+#H <- eigenvectors %*% 
 
 # Печатаем обратную матрицу
 print ("Обратная матрица А:")
