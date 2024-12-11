@@ -7,22 +7,34 @@ from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCharts import QChart, QChartView, QLineSeries
 import sympy as sp
 
-# Define variables
-x1, x2, x3, x4, y = sp.symbols('x1 x2 x3 x4 y')
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import solve_ivp
+import sympy as sp
+import math as m
 
 class Matrix:
-    def __init__(self, n):
+    def __init__(self, n, values, initial_conditions, err):
         self.size = n
-        self.values = np.zeros((n,n))
+        self.err = err
+        self.values = values
         self.determinant = None
         self.eigenvalues = np.zeros(n)
         self.eigenvectors = np.zeros((n, n))
-        self.initial_conditions = np.zeros(n)
+        self.initial_conditions = initial_conditions
         self.coefficients = np.zeros(n)
         self.inverse_eig = None
         self.inverse = None
         self.index_max_eigval = None
         self.matr_with_x = []
+        self.matr_resh = np.zeros((n-1, n-1))
+        self.gran = []
+
+    def calc_gran(self):
+        for i in range(self.size):
+            gran_value = (1 / self.eigenvalues[i]) * m.log(self.err)
+            print(gran_value)
+            self.gran.append(gran_value)
 
     def is_determinant_negative(self):
         self.determinant = np.linalg.det(self.values)
@@ -48,33 +60,34 @@ class Matrix:
 
     def expr_max_exp(self):
         self.find_index_of_max_eigenvector()
-        x = None
-        if (self.index_max_eigval == 0):
-            x = x1
-        elif (self.index_max_eigval == 1):
-            x = x2
-        elif (self.index_max_eigval == 2):
-            x = x3
-        else:
-            x = x4
-        xi = sp.solve(self.inverse[self.index_max_eigval][0]*x1+self.inverse[self.index_max_eigval][1]*x2+self.inverse[self.index_max_eigval][2]*x3+self.inverse[self.index_max_eigval][3]*x4, x1)[0]
+        x_resh = sp.symbols(f'x{self.index_max_eigval + 1}')
+        xi = sp.solve(sum(self.inverse[self.index_max_eigval][i] * sp.symbols(f'x{i + 1}') for i in range(self.size)), x_resh)[0]
         for i in range(self.size):
-            temp_expr = sum(self.values[i][j] * sp.symbols(f'x{j+1}') for j in range(self.size))
+            temp_expr = sum(self.values[i][j] * sp.symbols(f'x{j + 1}') for j in range(self.size))
             self.matr_with_x.append(temp_expr)
-        print(self.matr_with_x)
-        substitutedequations = [eq.subs(x1, xi) for eq in self.matr_with_x]
+        substitutedequations = [eq.subs(x_resh, xi) for eq in self.matr_with_x]
         simplifiedequations = [sp.simplify(eq) for eq in substitutedequations]
         print("\nПолученные выражения:")
-        for eq in simplifiedequations:
-            sp.pprint(eq)
-            print()
+        for i, eq in enumerate(simplifiedequations[1:]):
+            coefficients = [float(eq.coeff(sp.symbols(f'x{j+1}'))) for j in range(1, self.size)]
+            if i < self.matr_resh.shape[0]:
+                self.matr_resh[i, :len(coefficients)] = coefficients
+
+    def construct_equations_matrix(self):
+        equations_matrix = []
+        for i in range(self.size):
+            equation = sum(self.coefficients[j] * self.eigenvectors[j, i] * sp.exp(self.eigenvalues[j]) for j in range(self.size))
+            equations_matrix.append(equation)
+        return equations_matrix
 
     def calc(self):
         self.calculate_eigenvalues_and_eigenvectors()
         self.calculate_coefficients()
         self.calculate_inverse_from_eigenvectors()
         self.expr_max_exp()
-                
+        self.calc_gran()
+        equations_matrix = self.construct_equations_matrix()
+
 
 class MatrixApp(QMainWindow):
     def __init__(self):
@@ -115,6 +128,7 @@ class MatrixApp(QMainWindow):
         self.create_initial_conditions_inputs()
         self.central_widget.setLayout(self.layout)
         self.matrix = Matrix(self.size_input.value())
+        self.matrix1 = Matrix(self.size_input.value() - 1)
 
     def set_dark_theme(self):
         palette = QPalette()
@@ -179,6 +193,7 @@ class MatrixApp(QMainWindow):
                 except ValueError:
                     pass
         self.matrix.calc()
+        #self.matrix1.values = self.matrix.
     
         
     def plot_exponents(self):
